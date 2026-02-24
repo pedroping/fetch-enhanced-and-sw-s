@@ -12,9 +12,7 @@ fetch('https://fetch-progress.anthum.com/30kbps/images/sunrise-baseline.jpg')
   if (!response.body) {
     throw Error('ReadableStream not yet supported in this browser.')
   }
-
-  // to access headers, server must send CORS header "Access-Control-Expose-Headers: content-encoding, content-length x-file-size"
-  // server must send custom x-file-size header if gzip or other content-encoding is used
+  
   const contentEncoding = response.headers.get('content-encoding');
   const contentLength = response.headers.get(contentEncoding ? 'x-file-size' : 'content-length');
   if (contentLength === null) {
