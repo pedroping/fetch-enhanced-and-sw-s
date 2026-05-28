@@ -1,62 +1,70 @@
-'use strict'
+"use strict";
 
-const elProgress = document.getElementById('progress');
+const elProgress = document.getElementById("progress");
 
-status('downloading with fetch()...');
-fetch('https://fetch-progress.anthum.com/30kbps/images/sunrise-baseline.jpg')
-.then(response => {
-  if (!response.ok) {
-    throw Error(response.status+' '+response.statusText)
-  }
+status("downloading with fetch()...");
+fetch("https://fetch-progress.anthum.com/30kbps/images/sunrise-baseline.jpg")
+  .then((response) => {
+    if (!response.ok) {
+      throw Error(response.status + " " + response.statusText);
+    }
 
-  if (!response.body) {
-    throw Error('ReadableStream not yet supported in this browser.')
-  }
-  
-  const contentEncoding = response.headers.get('content-encoding');
-  const contentLength = response.headers.get(contentEncoding ? 'x-file-size' : 'content-length');
-  if (contentLength === null) {
-    throw Error('Response size header unavailable');
-  }
+    if (!response.body) {
+      throw Error("ReadableStream not yet supported in this browser.");
+    }
 
-  const total = parseInt(contentLength, 10);
-  let loaded = 0;
+    const contentEncoding = response.headers.get("content-encoding");
+    const contentLength = response.headers.get(
+      contentEncoding ? "x-file-size" : "content-length",
+    );
+    if (contentLength === null) {
+      throw Error("Response size header unavailable");
+    }
 
-  return new Response(
-    new ReadableStream({
-      start(controller) {
-        const reader = response.body.getReader();
+    const total = parseInt(contentLength, 10);
+    let loaded = 0;
 
-        read();
-        function read() {
-          reader.read().then(({done, value}) => {
-            if (done) {
-              controller.close();
-              return; 
-            }
-            loaded += value.byteLength;
-            progress({loaded, total})
-            controller.enqueue(value);
-            read();
-          }).catch(error => {
-            console.error(error);
-            controller.error(error)                  
-          })
-        }
-      }
-    })
-  );
-})
-.then(response => response.blob())
-.then(data => {
-  status('download completed')
-  document.getElementById('img').src = URL.createObjectURL(data);
-})
-.catch(error => {
-  console.error(error);
-  status(error);
-})
+    return new Response(
+      new ReadableStream({
+        start(controller) {
+          const reader = response.body.getReader();
 
-function progress({loaded, total}) {
-  elProgress.innerHTML = Math.round(loaded/total*100)+'%';
+          read();
+          function read() {
+            reader
+              .read()
+              .then(({ done, value }) => {
+                if (done) {
+                  controller.close();
+                  return;
+                }
+
+                loaded += value.byteLength;
+                progress({ loaded, total });
+                controller.enqueue(value);
+                read();
+              })
+              .catch((error) => {
+                console.error(error);
+                controller.error(error);
+              });
+          }
+        },
+      }),
+    );
+  })
+  .then((response) => response.blob())
+  .then((data) => {
+    status("download completed");
+    document.getElementById("img").src = URL.createObjectURL(data);
+  })
+  .catch((error) => {
+    console.error(error);
+    status(error);
+  });
+
+function progress({ loaded, total }) {
+  console.log(loaded, total);
+
+  elProgress.innerHTML = Math.round((loaded / total) * 100) + "%";
 }
